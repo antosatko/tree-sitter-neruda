@@ -7,11 +7,11 @@ module.exports = grammar({
   supertypes: ($) => [],
 
   // Added some specific conflicts that can cause ambiguity-induced recursion
-  conflicts: ($) => [
-    [$.identifier_path, $.call_expression],
-    [$.identifier_path, $.expression],
-    [$.index_expression, $.scheduler],
-  ],
+  // conflicts: ($) => [
+  //   [$.identifier_path, $.call_expression],
+  //   [$.identifier_path, $.expression],
+  //   [$.index_expression, $.scheduler],
+  // ],
 
   rules: {
     source_file: ($) => repeat($.top_level_statement),
@@ -45,25 +45,40 @@ module.exports = grammar({
     numeric_literal: ($) => token(/[0-9]+/),
     float_literal: ($) => token(/[0-9]+\.[0-9]+/),
 
-    // Use comma-separated repeat patterns that are harder to loop infinitely
+    // 1. Array Literal
     array_literal: ($) =>
       seq(
         "[",
         optional(seq($.expression, repeat(seq(",", $.expression)))),
+        optional(","), // Handles trailing comma safely
         "]",
       ),
 
+    // 2. Tuple Literal
     tuple_literal: ($) =>
       seq(
         "(",
         optional(seq($.expression, repeat(seq(",", $.expression)))),
+        optional(","),
         ")",
       ),
 
+    // 3. Parameter List
+    parameter_list: ($) =>
+      seq(
+        "(",
+        optional(seq($.parameter, repeat(seq(",", $.parameter)))),
+        optional(","),
+        ")",
+      ),
+
+    // 4. Struct Type
     struct_literal: ($) =>
       seq(
+        "struct",
         "{",
         optional(seq($.named_argument, repeat(seq(",", $.named_argument)))),
+        optional(","),
         "}",
       ),
 
@@ -171,9 +186,6 @@ module.exports = grammar({
         optional(seq(":", $.type)),
         $.block,
       ),
-
-    parameter_list: ($) =>
-      seq("(", optional(seq($.parameter, repeat(seq(",", $.parameter)))), ")"),
 
     parameter: ($) => seq($.identifier, ":", $.type),
 
