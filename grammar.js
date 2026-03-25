@@ -1,10 +1,17 @@
 module.exports = grammar({
   name: "neruda",
 
-  extras: ($) => [/\s+/, $.comment],
+  // Use token() for whitespace to ensure it's not a step in the syntax tree
+  extras: ($) => [token(/\s+/), $.comment],
 
-  // Removed expression from supertypes to prevent the recursion crash
   supertypes: ($) => [],
+
+  // Added some specific conflicts that can cause ambiguity-induced recursion
+  conflicts: ($) => [
+    [$.identifier_path, $.call_expression],
+    [$.identifier_path, $.expression],
+    [$.index_expression, $.scheduler],
+  ],
 
   rules: {
     source_file: ($) => repeat($.top_level_statement),
@@ -17,10 +24,10 @@ module.exports = grammar({
 
     identifier: ($) => /[a-zA-Z_][a-zA-Z0-9_]*/,
 
-    // FIXED: Higher precedence (2) so it wins over generic expressions
     identifier_path: ($) =>
       prec(2, seq($.identifier, repeat(seq("::", $.identifier)))),
 
+    // Grouping literals into a single token where possible
     literal: ($) =>
       choice(
         $.string_literal,
@@ -38,17 +45,25 @@ module.exports = grammar({
     numeric_literal: ($) => token(/[0-9]+/),
     float_literal: ($) => token(/[0-9]+\.[0-9]+/),
 
+    // Use comma-separated repeat patterns that are harder to loop infinitely
     array_literal: ($) =>
-      seq("[", repeat(seq($.expression, ",")), optional($.expression), "]"),
+      seq(
+        "[",
+        optional(seq($.expression, repeat(seq(",", $.expression)))),
+        "]",
+      ),
 
     tuple_literal: ($) =>
-      seq("(", repeat(seq($.expression, ",")), optional($.expression), ")"),
+      seq(
+        "(",
+        optional(seq($.expression, repeat(seq(",", $.expression)))),
+        ")",
+      ),
 
     struct_literal: ($) =>
       seq(
         "{",
-        repeat(seq($.named_argument, ",")),
-        optional($.named_argument),
+        optional(seq($.named_argument, repeat(seq(",", $.named_argument)))),
         "}",
       ),
 
@@ -91,22 +106,24 @@ module.exports = grammar({
         ),
       ),
 
-    unary_expression: ($) => prec.right(seq(choice("-", "!"), $.expression)),
+    unary_expression: ($) => prec.right(2, seq(choice("-", "!"), $.expression)),
 
     call_expression: ($) =>
-      seq(
-        $.identifier,
-        "(",
-        repeat(seq($.expression, ",")),
-        optional($.expression),
-        ")",
+      prec(
+        3,
+        seq(
+          $.identifier,
+          "(",
+          optional(seq($.expression, repeat(seq(",", $.expression)))),
+          ")",
+        ),
       ),
 
     member_expression: ($) =>
-      prec.left(3, seq($.expression, ".", $.identifier)),
+      prec.left(4, seq($.expression, ".", $.identifier)),
 
     index_expression: ($) =>
-      prec.left(3, seq($.expression, "[", $.expression, "]")),
+      prec.left(4, seq($.expression, "[", $.expression, "]")),
 
     statement: ($) =>
       choice(
@@ -156,7 +173,7 @@ module.exports = grammar({
       ),
 
     parameter_list: ($) =>
-      seq("(", repeat(seq($.parameter, ",")), optional($.parameter), ")"),
+      seq("(", optional(seq($.parameter, repeat(seq(",", $.parameter)))), ")"),
 
     parameter: ($) => seq($.identifier, ":", $.type),
 
@@ -181,7 +198,8 @@ module.exports = grammar({
         optional(seq("after", $.block)),
       ),
 
-    query: ($) => seq("(", repeat(seq($.clause, ",")), optional($.clause), ")"),
+    query: ($) =>
+      seq("(", optional(seq($.clause, repeat(seq(",", $.clause)))), ")"),
     clause: ($) =>
       choice($.select_clause, $.action_clause, $.restriction_clause),
     select_clause: ($) =>
@@ -213,8 +231,7 @@ module.exports = grammar({
       seq(
         "struct",
         "{",
-        repeat(seq($.parameter, ",")),
-        optional($.parameter),
+        optional(seq($.parameter, repeat(seq(",", $.parameter)))),
         "}",
       ),
     named_argument: ($) => seq($.identifier, ":", $.expression),
