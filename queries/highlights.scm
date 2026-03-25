@@ -1,84 +1,83 @@
-; Keywords
-(keyword) @keyword
+; --- Keywords ---
+[
+  "scheduler"
+  "system"
+  "init"
+  "struct"
+  "component"
+  "var"
+  "function"
+  "return"
+  "if"
+  "else"
+  "loop"
+  "while"
+  "break"
+  "continue"
+  "as"
+  "type"
+  "before"
+  "after"
+  "where"
+  "systems"
+  "resources"
+  "on"
+] @keyword
 
-; Function definitions
-(function) @function
-(function . identifier) @function.name
+; --- Control Flow ---
+[
+  "if"
+  "else"
+  "loop"
+  "while"
+  "break"
+  "continue"
+  "return"
+] @keyword.control
 
-; System definitions
-(system) @function
-(system . identifier) @function.name
+; --- Punctuation & Brackets ---
+[ "(" ")" "[" "]" "{" "}" ] @punctuation.bracket
 
-; Scheduler definitions
-(scheduler) @function
-(scheduler . identifier) @function.name
+[ "." "," ":" ";" "::" ] @punctuation.delimiter
 
-; Components
-(component) @type
-(component . identifier) @type.name
+; --- Operators ---
+[
+  "+" "-" "*" "/" "==" "!=" "<" ">" "<=" ">="
+  "&&" "||" "=" "!" "&" "+=" "-=" "*=" "/=" "%="
+] @operator
 
-; Types
-(type_definition) @type
-(type_definition . identifier) @type.name
+; --- Definitions ---
+; These highlight the names of things you define
+(function (identifier) @function)
+(system (identifier) @function)
+(scheduler (identifier) @type)
+(component (identifier) @type)
+(type_definition (identifier) @type)
+(variable_statement (identifier) @variable)
 
-; Variables
-(variable_statement) @variable
-(variable_statement . identifier) @variable.name
+; --- Function Calls & Expressions ---
+(call_expression (identifier) @function)
+(member_expression (identifier) @property)
+(index_expression) @variable
 
-; Identifiers
-(identifier) @identifier
+; --- Parameters & Types ---
+(parameter (identifier) @variable.parameter)
+(type (identifier_path) @type)
+(array_type) @type
+(struct_type) @type
 
-; Literals
+; --- Literals ---
 (numeric_literal) @number
-(float_literal) @float
+(float_literal) @number
 (string_literal) @string
-(char_literal) @character
+(char_literal) @string
+(array_literal) @punctuation.bracket
+(struct_literal) @punctuation.bracket
 
-; Operators
-(binary_expression operator) @operator
-(unary_expression operator) @operator
-
-; Comments
+; --- Comments ---
 (comment) @comment
-(docstring) @comment
-
-; Punctuation
-(symbol) @punctuation.delimiter
-(symbol) @punctuation.bracket
-
-; Function calls
-(call_expression function: (identifier) @function.call)
-
-; Struct literals
-(struct_literal) @structure
-
-; Array literals
-(array_literal) @array
-
-; Block
-(block) @markup.list
-
-; Conditional statements
-(if_statement) @conditional
-(while_statement) @conditional
-(loop_statement) @conditional
-
-; Return statements
-(return_statement) @keyword.return
-
-; Control flow
-(break_statement) @keyword.return
-(continue_statement) @keyword.return
-
-; Field access
-(member_expression) @method
-
-; Indexing
-(index_expression) @method
-
-; Type annotations
-(parameter) @parameter
-(type) @type
-
-; Documentation
 (docstring) @comment.documentation
+
+; --- Fallback ---
+; This covers any identifier not caught by the specific rules above
+(identifier) @variable

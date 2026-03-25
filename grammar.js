@@ -4,7 +4,10 @@ module.exports = grammar({
   extras: ($) => [/\s+/, $.comment, $.docstring],
 
   supertypes: ($) => [$.statement, $.expression, $.type, $.literal],
-
+  conflicts: ($) => [
+    [$.identifier_path, $.call_expression],
+    [$.index_expression, $.scheduler],
+  ],
   rules: {
     source_file: ($) => repeat($.top_level_statement),
 
@@ -12,8 +15,8 @@ module.exports = grammar({
       choice($.scheduler, $.function, $.system, $.component, $.type_definition),
 
     // Comments
-    comment: ($) => token(seq("//", /.*/)),
-    docstring: ($) => token(seq("///", /.*/)),
+    comment: ($) => token(prec(1, seq("//", /[^\/].*/))),
+    docstring: ($) => token(prec(2, seq("///", /.*/))),
 
     // Keywords
     keyword: ($) =>
@@ -89,7 +92,6 @@ module.exports = grammar({
         $.member_expression,
         $.index_expression,
         $.literal,
-        $.identifier,
       ),
 
     binary_expression: ($) =>
