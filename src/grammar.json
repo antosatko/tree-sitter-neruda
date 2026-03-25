@@ -390,29 +390,33 @@
       ]
     },
     "identifier_path": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "SYMBOL",
-          "name": "identifier"
-        },
-        {
-          "type": "REPEAT",
-          "content": {
-            "type": "SEQ",
-            "members": [
-              {
-                "type": "STRING",
-                "value": "::"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "identifier"
-              }
-            ]
+      "type": "PREC",
+      "value": 2,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "SYMBOL",
+            "name": "identifier"
+          },
+          {
+            "type": "REPEAT",
+            "content": {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "::"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "identifier"
+                }
+              ]
+            }
           }
-        }
-      ]
+        ]
+      }
     },
     "expression": {
       "type": "CHOICE",
@@ -1539,11 +1543,11 @@
     },
     {
       "type": "SYMBOL",
-      "name": "comment"
+      "name": "docstring"
     },
     {
       "type": "SYMBOL",
-      "name": "docstring"
+      "name": "comment"
     }
   ],
   "conflicts": [
@@ -1554,6 +1558,10 @@
     [
       "index_expression",
       "scheduler"
+    ],
+    [
+      "identifier_path",
+      "expression"
     ]
   ],
   "precedences": [],
@@ -1561,9 +1569,7 @@
   "inline": [],
   "supertypes": [
     "statement",
-    "expression",
-    "type",
-    "literal"
+    "type"
   ],
   "reserved": {}
 }

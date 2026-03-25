@@ -1,12 +1,14 @@
 module.exports = grammar({
-  name: "neruda",
+  name: "neruda", // Order matters: match the 3rd slash first
+  extras: ($) => [/\s+/, $.docstring, $.comment],
 
-  extras: ($) => [/\s+/, $.comment, $.docstring],
+  // Removed expression/literal from supertypes to prevent recursion crashes
+  supertypes: ($) => [$.statement, $.type],
 
-  supertypes: ($) => [$.statement, $.expression, $.type, $.literal],
   conflicts: ($) => [
     [$.identifier_path, $.call_expression],
     [$.index_expression, $.scheduler],
+    [$.identifier_path, $.expression],
   ],
   rules: {
     source_file: ($) => repeat($.top_level_statement),
@@ -14,7 +16,7 @@ module.exports = grammar({
     top_level_statement: ($) =>
       choice($.scheduler, $.function, $.system, $.component, $.type_definition),
 
-    // Comments
+    // Comments - strictly differentiated
     comment: ($) => token(prec(1, seq("//", /[^\/].*/))),
     docstring: ($) => token(prec(2, seq("///", /.*/))),
 
@@ -81,7 +83,8 @@ module.exports = grammar({
         "}",
       ),
 
-    identifier_path: ($) => seq($.identifier, repeat(seq("::", $.identifier))),
+    identifier_path: ($) =>
+      prec(2, seq($.identifier, repeat(seq("::", $.identifier)))),
 
     // Expressions
     expression: ($) =>
