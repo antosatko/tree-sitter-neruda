@@ -1,0 +1,10 @@
+{
+  "language": "neruda",
+  "scope": "source.neruda",
+  "fileTypes": [
+    ".nrd"
+  ],
+  "highlights": [
+    "queries/highlights.scm"
+  ]
+}
