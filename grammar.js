@@ -1,57 +1,26 @@
 module.exports = grammar({
-  name: "neruda", // Order matters: match the 3rd slash first
+  name: "neruda",
+
   extras: ($) => [/\s+/, $.docstring, $.comment],
 
-  // Removed expression/literal from supertypes to prevent recursion crashes
+  // Removed expression from supertypes to prevent the recursion crash
   supertypes: ($) => [$.statement, $.type],
 
-  conflicts: ($) => [
-    [$.identifier_path, $.call_expression],
-    [$.index_expression, $.scheduler],
-    [$.identifier_path, $.expression],
-  ],
   rules: {
     source_file: ($) => repeat($.top_level_statement),
 
     top_level_statement: ($) =>
       choice($.scheduler, $.function, $.system, $.component, $.type_definition),
 
-    // Comments - strictly differentiated
     comment: ($) => token(prec(1, seq("//", /[^\/].*/))),
     docstring: ($) => token(prec(2, seq("///", /.*/))),
 
-    // Keywords
-    keyword: ($) =>
-      choice(
-        "scheduler",
-        "system",
-        "init",
-        "struct",
-        "component",
-        "var",
-        "function",
-        "return",
-        "if",
-        "else",
-        "loop",
-        "while",
-        "break",
-        "continue",
-        "as",
-        "mut",
-        "type",
-        "before",
-        "after",
-        "where",
-        "systems",
-        "resources",
-        "on",
-      ),
-
-    // Identifiers
     identifier: ($) => /[a-zA-Z_][a-zA-Z0-9_]*/,
 
-    // Literals
+    // FIXED: Higher precedence (2) so it wins over generic expressions
+    identifier_path: ($) =>
+      prec(2, seq($.identifier, repeat(seq("::", $.identifier)))),
+
     literal: ($) =>
       choice(
         $.string_literal,
@@ -83,10 +52,6 @@ module.exports = grammar({
         "}",
       ),
 
-    identifier_path: ($) =>
-      prec(2, seq($.identifier, repeat(seq("::", $.identifier)))),
-
-    // Expressions
     expression: ($) =>
       choice(
         $.binary_expression,
@@ -115,6 +80,7 @@ module.exports = grammar({
             ">=",
             "&&",
             "||",
+            "=",
             "+=",
             "-=",
             "*=",
@@ -136,11 +102,12 @@ module.exports = grammar({
         ")",
       ),
 
-    member_expression: ($) => seq($.expression, ".", $.identifier),
+    member_expression: ($) =>
+      prec.left(3, seq($.expression, ".", $.identifier)),
 
-    index_expression: ($) => seq($.expression, "[", $.expression, "]"),
+    index_expression: ($) =>
+      prec.left(3, seq($.expression, "[", $.expression, "]")),
 
-    // Statements
     statement: ($) =>
       choice(
         $.variable_statement,
@@ -163,9 +130,7 @@ module.exports = grammar({
       ),
 
     expression_statement: ($) => seq($.expression, ";"),
-
     return_statement: ($) => seq("return", $.expression, ";"),
-
     if_statement: ($) =>
       seq(
         "if",
@@ -175,18 +140,12 @@ module.exports = grammar({
         $.block,
         optional(seq("else", $.block)),
       ),
-
     while_statement: ($) => seq("while", "(", $.expression, ")", $.block),
-
     loop_statement: ($) => seq("loop", $.block),
-
     break_statement: ($) => seq("break", ";"),
-
     continue_statement: ($) => seq("continue", ";"),
-
     block: ($) => seq("{", repeat($.statement), "}"),
 
-    // Function
     function: ($) =>
       seq(
         "function",
@@ -201,7 +160,6 @@ module.exports = grammar({
 
     parameter: ($) => seq($.identifier, ":", $.type),
 
-    // Scheduler
     scheduler: ($) =>
       seq(
         "scheduler",
@@ -213,7 +171,6 @@ module.exports = grammar({
         "}",
       ),
 
-    // System
     system: ($) =>
       seq(
         "system",
@@ -225,10 +182,8 @@ module.exports = grammar({
       ),
 
     query: ($) => seq("(", repeat(seq($.clause, ",")), optional($.clause), ")"),
-
     clause: ($) =>
       choice($.select_clause, $.action_clause, $.restriction_clause),
-
     select_clause: ($) =>
       seq(
         $.identifier,
@@ -236,7 +191,6 @@ module.exports = grammar({
         $.component_clause,
         repeat(seq("&", $.component_clause)),
       ),
-
     action_clause: ($) =>
       seq(
         "on",
@@ -245,25 +199,16 @@ module.exports = grammar({
         $.component_clause,
         repeat(seq("&", $.component_clause)),
       ),
-
     restriction_clause: ($) => seq("where", $.expression),
-
     component_clause: ($) =>
       seq($.identifier_path, optional(seq("as", $.identifier))),
-
-    // Component
     component: ($) =>
       seq("component", $.identifier, optional(seq("=", $.type)), ";"),
-
-    // Type definition
     type_definition: ($) =>
       seq("type", $.identifier, optional(seq("=", $.type)), ";"),
 
-    // Types
     type: ($) => choice($.identifier_path, $.array_type, $.struct_type),
-
     array_type: ($) => seq("[", $.type, optional(seq(";", $.literal)), "]"),
-
     struct_type: ($) =>
       seq(
         "struct",
@@ -272,7 +217,6 @@ module.exports = grammar({
         optional($.parameter),
         "}",
       ),
-
     named_argument: ($) => seq($.identifier, ":", $.expression),
   },
 });
