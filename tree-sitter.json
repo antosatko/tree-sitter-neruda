@@ -9,14 +9,9 @@
     }
   ],
   "metadata": {
-    "version": "0.0.1",
+    "version": "0.1.0",
     "license": "MIT",
     "description": "Neruda language support",
-    "authors": [
-      {
-        "name": "antosatko"
-      }
-    ],
     "links": {
       "repository": "https://github.com/antosatko/tree-sitter-neruda"
     }
