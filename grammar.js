@@ -1,10 +1,10 @@
 module.exports = grammar({
   name: "neruda",
 
-  extras: ($) => [/\s+/, $.docstring, $.comment],
+  extras: ($) => [/\s+/, $.comment],
 
   // Removed expression from supertypes to prevent the recursion crash
-  supertypes: ($) => [$.statement, $.type],
+  supertypes: ($) => [],
 
   rules: {
     source_file: ($) => repeat($.top_level_statement),
