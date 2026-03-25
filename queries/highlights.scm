@@ -76,7 +76,7 @@
 
 ; --- Comments ---
 (comment) @comment
-(docstring) @comment.documentation
+; (docstring) @comment.documentation
 
 ; --- Fallback ---
 ; This covers any identifier not caught by the specific rules above
