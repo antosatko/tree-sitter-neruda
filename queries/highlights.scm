@@ -71,12 +71,18 @@
 (float_literal) @number
 (string_literal) @string
 (char_literal) @string
-(array_literal) @punctuation.bracket
-(struct_literal) @punctuation.bracket
 
 ; --- Comments ---
 (comment) @comment
-; (docstring) @comment.documentation
+(docstring) @comment.doc ; This now works because it's in your grammar.js
+
+; --- Punctuation ---
+; Use parentheses for anonymous tokens if you want to highlight them specifically
+(".") @punctuation.delimiter
+(",") @punctuation.delimiter
+(":") @punctuation.delimiter
+(";") @punctuation.delimiter
+("::") @punctuation.delimiter
 
 ; --- Fallback ---
 ; This covers any identifier not caught by the specific rules above
